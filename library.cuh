@@ -5,6 +5,7 @@
 
 #include <cuda_runtime.h>
 #include <cstdint>
+#include <cuda_fp16.h>
 
 #if defined(_WIN32) || defined(__CYGWIN__)
     #ifdef FAST_OPS_EXPORTS
@@ -30,13 +31,14 @@ __device__ WelfordState block_reduce_welford(WelfordState val, WelfordState* sme
 __device__ float warp_reduce_sum_f32(float val);
 __device__ float block_reduce_sum_f32(float val, float* smem);
 
+
 // Global Kernels
 __global__ void fused_layernorm_fwd_kernel(
-    const float* __restrict__ x,
-    const float* __restrict__ residual,
-    const float* __restrict__ gamma,
-    const float* __restrict__ beta,
-    float* __restrict__ out,
+    const half* __restrict__ x,
+    const half* __restrict__ residual,
+    const half* __restrict__ gamma,
+    const half* __restrict__ beta,
+    half* __restrict__ out,
     float* __restrict__ mean_cache,
     float* __restrict__ rstd_cache,
     int rows,
@@ -44,14 +46,14 @@ __global__ void fused_layernorm_fwd_kernel(
     float eps
 );
 
-__global__ void fused_layernorm_bwd_kernel(
-    const float* __restrict__ dout,
-    const float* __restrict__ x,
-    const float* __restrict__ gamma,
+__global__ void fused_layernorm_bwd_kernel_warp(
+    const half* __restrict__ dout,
+    const half* __restrict__ x,
+    const half* __restrict__ gamma,
     const float* __restrict__ mean_cache,
     const float* __restrict__ rstd_cache,
-    float* __restrict__ dx,
-    float* __restrict__ dresidual,
+    half* __restrict__ dx,
+    half* __restrict__ dresidual,
     float* __restrict__ dgamma_part,
     float* __restrict__ dbeta_part,
     int rows,
